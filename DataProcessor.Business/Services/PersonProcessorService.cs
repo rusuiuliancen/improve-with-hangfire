@@ -1,13 +1,14 @@
+using DataProcessor.Business.Contracts;
+using DataProcessor.Business.Dtos;
+using DataProcessor.DataAccess;
+using DataProcessor.DataAccess.Entities;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
-using DataProcessor.DataAccess.Entities;
-using DataProcessor.DataAccess;
-using Microsoft.Extensions.Logging;
-using DataProcessor.Business.Contracts;
-using DataProcessor.Business.Dtos;
 
 namespace DataProcessor.Business.Services
 {
@@ -15,21 +16,24 @@ namespace DataProcessor.Business.Services
     {
         private readonly AppDbContext _dbContext;
         private readonly ILogger<PersonProcessorService> _logger;
+        private readonly IEmailSender _emailSender;
 
-        public PersonProcessorService(AppDbContext dbContext, ILogger<PersonProcessorService> logger)
+        public PersonProcessorService(AppDbContext dbContext, ILogger<PersonProcessorService> logger, IEmailSender emailSender)
         {
             _dbContext = dbContext;
             _logger = logger;
+            _emailSender = emailSender;
         }
 
-        public CsvProcessResult ProcessCsv(Stream csvStream)
+        public PersonProcessResult ProcessCsv(Stream csvStream)
         {
-            int totalProcessed = 0;
-            int totalInserted = 0;
-            int totalInvalid = 0;
+            int successfulInserts = 0;
+            int failedInserts = 0;
+
             using var reader = new StreamReader(csvStream);
             string? line;
             bool isHeader = true;
+
             while ((line = reader.ReadLine()) != null)
             {
                 if (isHeader)
@@ -37,32 +41,55 @@ namespace DataProcessor.Business.Services
                     isHeader = false;
                     continue;
                 }
-                totalProcessed++;
-                var fields = line.Split(',');
-                if (fields.Length != 7)
+
+                var validPerson = ExtractValidPerson(line);
+                if (validPerson == null)
                 {
-                    totalInvalid++;
-                    _logger.LogWarning($"Invalid row: {line}");
+                    failedInserts++;
                     continue;
                 }
-                var person = ParsePerson(fields);
-                var validationErrors = ValidatePerson(person);
-                if (validationErrors.Count > 0)
+
+                try 
                 {
-                    totalInvalid++;
-                    _logger.LogWarning($"Invalid row: {line} | Errors: {string.Join(", ", validationErrors)}");
+                    _dbContext.Persons.Add(validPerson);
+                    _dbContext.SaveChanges();
+                    successfulInserts++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error inserting row: {line}");
+                    failedInserts++;
                     continue;
                 }
-                _dbContext.Persons.Add(person);
-                _dbContext.SaveChanges();
-                totalInserted++;
+
+                _emailSender.SendEmail(validPerson.Email, "Welcome to DataProcessorApp", $"Hello, you have been added to our system.");
+
             }
-            return new CsvProcessResult
+            return new PersonProcessResult
             {
-                TotalProcessed = totalProcessed,
-                TotalInserted = totalInserted,
-                TotalInvalid = totalInvalid
+                SuccessfulRecords = successfulInserts,
+                FailedRecords = failedInserts
             };
+        }
+
+        private Person? ExtractValidPerson(string? line)
+        {
+            var fields = line.Split(',');
+            if (fields.Length != 7)
+            {
+                _logger.LogWarning($"Invalid row: {line}");
+                return null;
+            }
+
+            var person = ParsePerson(fields);
+            var validationErrors = ValidatePerson(person);
+            if (validationErrors.Count > 0)
+            {
+                _logger.LogWarning($"Invalid row: {line} | Errors: {string.Join(", ", validationErrors)}");
+                return null;
+            }
+
+            return person;
         }
 
         private Person ParsePerson(string[] fields)
@@ -75,7 +102,9 @@ namespace DataProcessor.Business.Services
                 Phone = fields[3].Trim(),
                 Address = fields[4].Trim(),
                 Country = fields[5].Trim(),
-                DateOfBirth = DateTime.TryParseExact(fields[6].Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dob) ? dob : DateTime.MinValue
+                DateOfBirth = DateTime.TryParseExact(fields[6].Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dob) ? dob : DateTime.MinValue,
+                Age = DateTime.Today.Year - dob.Year - (dob > DateTime.Today.AddYears(- (DateTime.Today.Year - dob.Year)) ? 1 : 0),
+                EmailSent = false
             };
         }
 
@@ -96,6 +125,11 @@ namespace DataProcessor.Business.Services
                 errors.Add("Country invalid");
             if (person.DateOfBirth == DateTime.MinValue || person.DateOfBirth > DateTime.Today)
                 errors.Add("DateOfBirth invalid");
+            if (_dbContext.Persons.Any(p => p.Email == person.Email))
+                errors.Add("Email already exists");
+            if (_dbContext.Persons.Any(p => p.Phone == person.Phone))
+                errors.Add("Phone already exists");
+
             return errors;
         }
     }

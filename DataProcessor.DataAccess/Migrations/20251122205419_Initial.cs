@@ -22,7 +22,10 @@ namespace DataProcessor.DataAccess.Migrations
                     Phone = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Address = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Country = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Age = table.Column<int>(type: "int", nullable: false),
+                    EmailSent = table.Column<bool>(type: "bit", nullable: false),
+                    ProcessException = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {

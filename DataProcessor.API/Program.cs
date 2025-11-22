@@ -15,6 +15,8 @@ namespace DataProcessor.API
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddScoped<IEmailSender, EmailSender>();
             builder.Services.AddScoped<IPersonProcessorService, PersonProcessorService>();
 
             builder.Services.AddDbContext<AppDbContext>();

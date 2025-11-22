@@ -5,7 +5,6 @@ namespace DataProcessor.DataAccess
 {
     public class AppDbContext : DbContext
     {
-        // Parameterless constructor to allow design-time tools to create the context
         public AppDbContext()
         {
         }

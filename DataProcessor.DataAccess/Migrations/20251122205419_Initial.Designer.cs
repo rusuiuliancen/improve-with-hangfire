@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataProcessor.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251122172316_Initial")]
+    [Migration("20251122205419_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -36,6 +36,9 @@ namespace DataProcessor.DataAccess.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int>("Age")
+                        .HasColumnType("int");
+
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -48,6 +51,9 @@ namespace DataProcessor.DataAccess.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("EmailSent")
+                        .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -63,6 +69,9 @@ namespace DataProcessor.DataAccess.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ProcessException")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

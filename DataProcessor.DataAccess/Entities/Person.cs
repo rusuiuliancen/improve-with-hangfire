@@ -12,5 +12,8 @@ namespace DataProcessor.DataAccess.Entities
         public string Address { get; set; }
         public string Country { get; set; }
         public DateTime DateOfBirth { get; set; }
+        public int Age { get; set; }
+        public bool EmailSent { get; set; }
+        public string? ProcessException { get; set; }
     }
 }
