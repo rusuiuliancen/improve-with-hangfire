@@ -16,9 +16,9 @@ namespace DataProcessor.Business.Services
     {
         private readonly AppDbContext _dbContext;
         private readonly ILogger<PersonProcessorService> _logger;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailService _emailSender;
 
-        public PersonProcessorService(AppDbContext dbContext, ILogger<PersonProcessorService> logger, IEmailSender emailSender)
+        public PersonProcessorService(AppDbContext dbContext, ILogger<PersonProcessorService> logger, IEmailService emailSender)
         {
             _dbContext = dbContext;
             _logger = logger;
