@@ -36,6 +36,7 @@ namespace DataProcessor.Business.Services
                     else
                     {
                         person.EmailSent = true;
+                        person.ProcessException = null;
                         _dbContext.SaveChanges();
                     }
 
