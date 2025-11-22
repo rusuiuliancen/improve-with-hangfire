@@ -30,13 +30,15 @@ namespace DataProcessor.Business.Services
                     if (random.Next(10) == 0)
                     {
                         person.ProcessException = "[Email] Something went wrong.";
+                        _dbContext.SaveChanges();
+                        throw new Exception("Simulated email sending failure.");
                     }
                     else
                     {
                         person.EmailSent = true;
+                        _dbContext.SaveChanges();
                     }
 
-                    _dbContext.SaveChanges();
                 }               
 
                 _logger.LogInformation($"Email sent to {to}");
