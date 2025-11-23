@@ -67,7 +67,8 @@ namespace DataProcessor.Business.Services
                 }
             }
 
-            _emailSender.SendNotifications();
+            var tenant = tenantResolver.TryGetTenant();
+            RecurringJob.AddOrUpdate("daily-email-notifications@" + tenant.Name, () => _emailSender.SendNotifications(), Cron.Minutely);
 
             return new PersonProcessResult
             {

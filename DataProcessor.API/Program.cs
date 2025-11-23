@@ -1,9 +1,11 @@
+using DataProcessor.API.Hangfire;
 using DataProcessor.API.Middlewares;
 using DataProcessor.API.Swagger;
 using DataProcessor.Business.Contracts;
 using DataProcessor.Business.Services;
 using DataProcessor.Business.Tenant;
 using DataProcessor.DataAccess;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using NLog.Web;
 
@@ -16,7 +18,7 @@ namespace DataProcessor.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add Hangfire services
-            //builder.Services.AddHangfireServer();
+            builder.Services.AddHangfireServer();
 
             // Add services to the container.
             builder.Services.AddControllers();
@@ -44,15 +46,15 @@ namespace DataProcessor.API
                 optionsBuilder.UseSqlServer(tenant.ConnectionString);
                 return new AppDbContext(optionsBuilder.Options);
             });
-            
-            //builder.Services.AddHangfire((provider, config) =>
-            //{
-            //    config.UseSimpleAssemblyNameTypeSerializer()
-            //          .UseRecommendedSerializerSettings()
-            //          .UseSqlServerStorage("Server=(localdb)\\MSSQLLocalDB;Database=DataProcessorDb_Hangfire;Trusted_Connection=True;MultipleActiveResultSets=true")
-            //          .UseFilter(new HangFireMultiTenantClientFilter())
-            //          .UseActivator(new TenantJobActivator(provider));
-            //});
+
+            builder.Services.AddHangfire((provider, config) =>
+            {
+                config.UseSimpleAssemblyNameTypeSerializer()
+                      .UseRecommendedSerializerSettings()
+                      .UseSqlServerStorage("Server=(localdb)\\MSSQLLocalDB;Database=DataProcessorDb_Hangfire;Trusted_Connection=True;MultipleActiveResultSets=true")
+                      .UseFilter(new HangFireMultiTenantClientFilter())
+                      .UseActivator(new TenantJobActivator(provider));
+            });
 
             builder.Services.AddHttpContextAccessor();
 
@@ -71,7 +73,7 @@ namespace DataProcessor.API
             app.UseAuthorization();
             app.UseMiddleware<TenantMiddleware>();
 
-            //app.UseHangfireDashboard("/hangfire");
+            app.UseHangfireDashboard("/hangfire");
             app.MapControllers();
             app.Run();
         }

@@ -24,4 +24,8 @@
     <ProjectReference Include="..\DataProcessor.DataAccess\DataProcessor.DataAccess.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Hangfire\" />
+  </ItemGroup>
+
 </Project>
