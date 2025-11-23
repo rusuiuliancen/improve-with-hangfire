@@ -27,6 +27,12 @@ namespace DataProcessor.Business.Services
                 var person = _dbContext.Persons.FirstOrDefault(p => p.Email == to);
                 if (person != null)
                 {
+                    if(person.EmailSent)
+                    {
+                        _logger.LogInformation($"Email already sent to {to}, skipping.");
+                        return;
+                    }
+
                     if (random.Next(10) == 0)
                     {
                         person.ProcessException = "[Email] Something went wrong.";
