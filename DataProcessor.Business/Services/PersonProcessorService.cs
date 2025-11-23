@@ -1,7 +1,9 @@
 using DataProcessor.Business.Contracts;
 using DataProcessor.Business.Dtos;
+using DataProcessor.Business.Tenant;
 using DataProcessor.DataAccess;
 using DataProcessor.DataAccess.Entities;
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,13 +18,15 @@ namespace DataProcessor.Business.Services
     {
         private readonly AppDbContext _dbContext;
         private readonly ILogger<PersonProcessorService> _logger;
-        private readonly IEmailService _emailSender;
+        private readonly IEmailNotificationService _emailSender;
+        private readonly ITenantResolver tenantResolver;
 
-        public PersonProcessorService(AppDbContext dbContext, ILogger<PersonProcessorService> logger, IEmailService emailSender)
+        public PersonProcessorService(AppDbContext dbContext, ILogger<PersonProcessorService> logger, IEmailNotificationService emailSender, ITenantResolver tenantResolver)
         {
             _dbContext = dbContext;
             _logger = logger;
             _emailSender = emailSender;
+            this.tenantResolver = tenantResolver;
         }
 
         public PersonProcessResult ProcessCsv(Stream csvStream)
@@ -61,10 +65,10 @@ namespace DataProcessor.Business.Services
                     failedInserts++;
                     continue;
                 }
-
-                _emailSender.SendEmail(validPerson.Email, "Welcome to DataProcessorApp", $"Hello, you have been added to our system.");
-
             }
+
+            _emailSender.SendNotifications();
+
             return new PersonProcessResult
             {
                 SuccessfulRecords = successfulInserts,
@@ -98,7 +102,7 @@ namespace DataProcessor.Business.Services
             {
                 FirstName = fields[0].Trim(),
                 LastName = fields[1].Trim(),
-                Email = fields[2].Trim(),
+                Email = fields[2].Trim(), 
                 Phone = fields[3].Trim(),
                 Address = fields[4].Trim(),
                 Country = fields[5].Trim(),

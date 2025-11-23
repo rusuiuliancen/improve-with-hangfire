@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DataProcessor.Business.Services
 {
-    public class EmailService : IEmailService
+    public class EmailService : IEmailNotificationService
     {
         private readonly AppDbContext _dbContext;
         private readonly ILogger<EmailService> _logger;
@@ -17,27 +17,21 @@ namespace DataProcessor.Business.Services
             _dbContext = dbContext;
             _logger = logger;
         }
-        public void SendEmail(string to, string subject, string body)
+        public void SendNotifications()
         {
             var random = new Random();
             try
             {
                 Task.Delay(200).Wait();
 
-                var person = _dbContext.Persons.FirstOrDefault(p => p.Email == to);
-                if (person != null)
+                var persons = _dbContext.Persons.Where(p=>!p.EmailSent);
+                foreach (var person in persons)
                 {
-                    if(person.EmailSent)
-                    {
-                        _logger.LogInformation($"Email already sent to {to}, skipping.");
-                        return;
-                    }
-
                     if (random.Next(10) == 0)
                     {
                         person.ProcessException = "[Email] Something went wrong.";
                         _dbContext.SaveChanges();
-                        throw new Exception("Simulated email sending failure.");
+                        continue;
                     }
                     else
                     {
@@ -47,12 +41,10 @@ namespace DataProcessor.Business.Services
                     }
 
                 }               
-
-                _logger.LogInformation($"Email sent to {to}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to send email to {to}");
+                _logger.LogError(ex, $"Failed to send email notifications.");
                 throw;
             }
         }
