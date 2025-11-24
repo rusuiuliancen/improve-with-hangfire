@@ -31,6 +31,7 @@ namespace DataProcessor.API
             builder.Services.AddScoped<EmailNotificationService>();
             builder.Services.AddScoped<IPersonProcessorService, PersonProcessorService>();
             builder.Services.AddScoped<PersonProcessorService>();
+            builder.Services.AddScoped<ProcessPersonAgeService>();
             builder.Services.AddScoped<ITenantResolver, TenantResolver>();
             builder.Services.AddScoped<TenantModel>();
 
