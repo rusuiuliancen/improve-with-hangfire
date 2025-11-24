@@ -1,3 +1,4 @@
+using DataProcessor.API.Hangfire;
 using DataProcessor.API.Middlewares;
 using DataProcessor.API.Swagger;
 using DataProcessor.Business.Contracts;
@@ -29,6 +30,7 @@ namespace DataProcessor.API
             builder.Services.AddScoped<IEmailNotificationService, EmailNotificationService>();
             builder.Services.AddScoped<EmailNotificationService>();
             builder.Services.AddScoped<IPersonProcessorService, PersonProcessorService>();
+            builder.Services.AddScoped<PersonProcessorService>();
             builder.Services.AddScoped<ITenantResolver, TenantResolver>();
             builder.Services.AddScoped<TenantModel>();
 
@@ -60,6 +62,9 @@ namespace DataProcessor.API
             builder.Host.UseNLog();
 
             var app = builder.Build();
+
+            //var jobRegistry = new JobRegistry();
+            //jobRegistry.RegisterJobs(app.Services);
 
             if (app.Environment.IsDevelopment())
             {

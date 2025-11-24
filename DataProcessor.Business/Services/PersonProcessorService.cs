@@ -107,7 +107,7 @@ namespace DataProcessor.Business.Services
                 Address = fields[4].Trim(),
                 Country = fields[5].Trim(),
                 DateOfBirth = DateTime.TryParseExact(fields[6].Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dob) ? dob : DateTime.MinValue,
-                Age = DateTime.Today.Year - dob.Year - (dob > DateTime.Today.AddYears(- (DateTime.Today.Year - dob.Year)) ? 1 : 0),
+                Age = 0,
                 EmailSent = false
             };
         }
