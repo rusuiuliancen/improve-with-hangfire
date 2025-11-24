@@ -11,6 +11,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace DataProcessor.Business.Services
 {
@@ -67,8 +68,8 @@ namespace DataProcessor.Business.Services
                 }
             }
 
-            var tenant = tenantResolver.TryGetTenant();
-            RecurringJob.AddOrUpdate("daily-email-notifications@" + tenant.Name, () => _emailSender.SendNotifications(), Cron.Minutely);
+            var parentJobId = BackgroundJob.Enqueue(() => CalculateAndUpdateAges());
+            BackgroundJob.ContinueJobWith(parentJobId, () => RemovePhoneNumbersForPersons());
 
             return new PersonProcessResult
             {
@@ -108,7 +109,7 @@ namespace DataProcessor.Business.Services
                 Address = fields[4].Trim(),
                 Country = fields[5].Trim(),
                 DateOfBirth = DateTime.TryParseExact(fields[6].Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dob) ? dob : DateTime.MinValue,
-                Age = DateTime.Today.Year - dob.Year - (dob > DateTime.Today.AddYears(- (DateTime.Today.Year - dob.Year)) ? 1 : 0),
+                Age = 0,
                 EmailSent = false
             };
         }
@@ -136,6 +137,32 @@ namespace DataProcessor.Business.Services
                 errors.Add("Phone already exists");
 
             return errors;
+        }
+
+        public void CalculateAndUpdateAges()
+        {
+            var persons = _dbContext.Persons.ToList();
+            foreach (var person in persons)
+            {
+                Task.Delay(1000).Wait();
+                var dob = person.DateOfBirth;
+                var age = DateTime.Today.Year - dob.Year - (dob > DateTime.Today.AddYears(-(DateTime.Today.Year - dob.Year)) ? 1 : 0);
+                person.Age = age;
+                _dbContext.Persons.Update(person);
+            }
+            _dbContext.SaveChanges();
+        }
+
+        public void RemovePhoneNumbersForPersons()
+        {
+            var persons = _dbContext.Persons.Where(p => p.Age < 35).ToList();
+            foreach (var person in persons)
+            {
+                Task.Delay(1000).Wait();
+                person.Phone = string.Empty;
+                _dbContext.Persons.Update(person);
+            }
+            _dbContext.SaveChanges();
         }
     }
 }

@@ -18,7 +18,13 @@ namespace DataProcessor.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add Hangfire services
-            builder.Services.AddHangfireServer();
+            builder.Services.AddHangfireServer(options=>
+                        {
+                            options.WorkerCount = 20;
+                            options.Queues = new[] { "default", "persons-queue" };
+                            options.ServerName = "DataProcessorHangfireServer";
+                        }
+                );
 
             // Add services to the container.
             builder.Services.AddControllers();
@@ -33,6 +39,9 @@ namespace DataProcessor.API
             builder.Services.AddScoped<IPersonProcessorService, PersonProcessorService>();
             builder.Services.AddScoped<ITenantResolver, TenantResolver>();
             builder.Services.AddScoped<TenantModel>();
+            builder.Services.AddScoped<IProcessAllPersonService, ProcessAllPersonService>();
+            builder.Services.AddScoped<ProcessAllPersonService>();
+            builder.Services.AddScoped<PersonProcessorService>();
 
             builder.Services.AddScoped<AppDbContext>(provider =>
             {
@@ -40,7 +49,7 @@ namespace DataProcessor.API
                 var tenant = tenantResolver.TryGetTenant();
 
                 if (tenant == null)
-                    throw new InvalidOperationException("Tenant not resolved.");
+                    tenant = TenantStore.TenantDictionary.Values.First();
 
                 var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
                 optionsBuilder.UseSqlServer(tenant.ConnectionString);
@@ -62,6 +71,9 @@ namespace DataProcessor.API
             builder.Host.UseNLog();
 
             var app = builder.Build();
+
+            var jobRegistry = new JobRegistry();
+            jobRegistry.RegisterJobs(app.Services);
 
             if (app.Environment.IsDevelopment())
             {
