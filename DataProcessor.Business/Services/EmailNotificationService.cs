@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace DataProcessor.Business.Services
 {
-    public class EmailService : IEmailNotificationService
+    public class EmailNotificationService : IEmailNotificationService
     {
         private readonly AppDbContext _dbContext;
-        private readonly ILogger<EmailService> _logger;
+        private readonly ILogger<EmailNotificationService> _logger;
 
-        public EmailService(AppDbContext dbContext, ILogger<EmailService> logger)
+        public EmailNotificationService(AppDbContext dbContext, ILogger<EmailNotificationService> logger)
         {
             _dbContext = dbContext;
             _logger = logger;

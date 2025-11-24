@@ -26,8 +26,8 @@ namespace DataProcessor.API
                 c.OperationFilter<SwaggerTenantHeaderFilter>();
             });
 
-            builder.Services.AddScoped<IEmailNotificationService, EmailService>();
-            builder.Services.AddScoped<EmailService>();
+            builder.Services.AddScoped<IEmailNotificationService, EmailNotificationService>();
+            builder.Services.AddScoped<EmailNotificationService>();
             builder.Services.AddScoped<IPersonProcessorService, PersonProcessorService>();
             builder.Services.AddScoped<ITenantResolver, TenantResolver>();
             builder.Services.AddScoped<TenantModel>();
@@ -38,7 +38,7 @@ namespace DataProcessor.API
                 var tenant = tenantResolver.TryGetTenant();
 
                 if (tenant == null)
-                    throw new InvalidOperationException("Tenant not resolved.");
+                    tenant = TenantStore.TenantDictionary.Values.First();
 
                 var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
                 optionsBuilder.UseSqlServer(tenant.ConnectionString);
