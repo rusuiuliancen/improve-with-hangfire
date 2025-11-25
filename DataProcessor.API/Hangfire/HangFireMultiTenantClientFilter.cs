@@ -4,10 +4,9 @@ namespace DataProcessor.API.Hangfire
 {
     public class HangFireMultiTenantClientFilter : IClientFilter
     {
-        public void OnCreated(CreatedContext filterContext)
+        public void OnCreated(CreatedContext context)
         {
-            filterContext.Parameters.TryGetValue("RecurringJobId", out _);
-            filterContext.Parameters.TryGetValue("tenant", out _);
+            // do nothing
         }
 
         public void OnCreating(CreatingContext filterContext)
