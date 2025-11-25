@@ -22,7 +22,7 @@ namespace DataProcessor.Business.Services
             foreach (var person in persons)
             {
                 var jobId = $"recalculate-age-{person.Id}@" + tenantKey;
-                RecurringJob.AddOrUpdate(jobId, "persons-queue", () => RecalculateAge(person.Id), Cron.Minutely);
+                RecurringJob.AddOrUpdate(jobId, "process-person", () => RecalculateAge(person.Id), Cron.Minutely);
             }
         }
 
