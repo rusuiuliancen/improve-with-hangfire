@@ -22,7 +22,6 @@ namespace DataProcessor.Business.Services
             var random = new Random();
             try
             {
-                Task.Delay(200).Wait();
 
                 var persons = _dbContext.Persons.Where(p=>!p.EmailSent);
                 foreach (var person in persons)
@@ -35,6 +34,7 @@ namespace DataProcessor.Business.Services
                     }
                     else
                     {
+                        Task.Delay(500).Wait(); //simute email sending delay
                         person.EmailSent = true;
                         person.ProcessException = null;
                         _dbContext.SaveChanges();
