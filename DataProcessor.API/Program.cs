@@ -64,8 +64,6 @@ namespace DataProcessor.API
 
             var app = builder.Build();
 
-            //var jobRegistry = new JobRegistry();
-            //jobRegistry.RegisterJobs(app.Services);
 
             if (app.Environment.IsDevelopment())
             {
